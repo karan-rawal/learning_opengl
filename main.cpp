@@ -1,11 +1,75 @@
+#include <fstream>
 #include <iostream>
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 #include "string"
+#include "sstream"
 
 constexpr unsigned int WIDTH = 800;
 constexpr unsigned int HEIGHT = 800;
 std::string TITLE = "Learning Opengl 2";
+
+std::string readFile(const char* filePath) {
+    std::ifstream file;
+    file.open(filePath);
+    std::string data;
+    if (file.is_open()) {
+        std::stringstream fileStreamData;
+        fileStreamData << file.rdbuf();
+        data = fileStreamData.str();
+    } else {
+        std::cerr << "Failed to open shader file: " << filePath;
+    }
+    return data;
+}
+
+unsigned int createShader(const char* shaderSource, unsigned int shaderType) {
+    unsigned int shader = glCreateShader(shaderType);
+    glShaderSource(shader, 1, &shaderSource, nullptr);
+    glCompileShader(shader);
+
+    int status;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+
+    if (!status) {
+        int logLength;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
+        char log[logLength];
+        glGetShaderInfoLog(shader, logLength, nullptr, log);
+
+        std::cout << "Failed to compile shader: " << shaderSource << ":" << log;
+    }
+    return shader;
+}
+
+unsigned int createShaderProgram(const char* fragmentShaderPath, const char* vertexShaderPath) {
+    std::string fragmentShaderSource = readFile(fragmentShaderPath);
+    unsigned int fragmentShader = createShader(fragmentShaderSource.c_str(), GL_FRAGMENT_SHADER);
+
+    std::string vertexShaderSource = readFile(vertexShaderPath);
+    unsigned int vertexShader = createShader(vertexShaderSource.c_str(), GL_VERTEX_SHADER);
+
+    unsigned int shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, fragmentShader);
+    glAttachShader(shaderProgram, vertexShader);
+    glLinkProgram(shaderProgram);
+
+    int status;
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &status);
+
+    if (!status) {
+        int infoLogLength;
+        glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
+        char infoLog[infoLogLength];
+        glGetProgramInfoLog(shaderProgram, infoLogLength, nullptr, infoLog);
+        std::cout << "Failed to link shader program: " << infoLog;
+    }
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    return shaderProgram;
+}
 
 void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -45,6 +109,8 @@ int main() {
         glfwTerminate();
         return EXIT_FAILURE;
     }
+
+    unsigned int shaderProgram = createShaderProgram("../shader1.frag", "../shader1.vert");
 
     glViewport(0, 0, WIDTH, HEIGHT);
 
