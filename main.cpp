@@ -9,6 +9,12 @@ constexpr unsigned int WIDTH = 800;
 constexpr unsigned int HEIGHT = 800;
 std::string TITLE = "Learning Opengl 2";
 
+float vertices[] = {
+    -0.5, -0.5, 0.0,
+    0.0, 0.5, 0.0,
+    0.5, -0.5, 0.0,
+};
+
 std::string readFile(const char* filePath) {
     std::ifstream file;
     file.open(filePath);
@@ -43,13 +49,13 @@ unsigned int createShader(const char* shaderSource, unsigned int shaderType) {
 }
 
 unsigned int createShaderProgram(const char* fragmentShaderPath, const char* vertexShaderPath) {
-    std::string fragmentShaderSource = readFile(fragmentShaderPath);
-    unsigned int fragmentShader = createShader(fragmentShaderSource.c_str(), GL_FRAGMENT_SHADER);
+    const std::string fragmentShaderSource = readFile(fragmentShaderPath);
+    const unsigned int fragmentShader = createShader(fragmentShaderSource.c_str(), GL_FRAGMENT_SHADER);
 
-    std::string vertexShaderSource = readFile(vertexShaderPath);
-    unsigned int vertexShader = createShader(vertexShaderSource.c_str(), GL_VERTEX_SHADER);
+    const std::string vertexShaderSource = readFile(vertexShaderPath);
+    const unsigned int vertexShader = createShader(vertexShaderSource.c_str(), GL_VERTEX_SHADER);
 
-    unsigned int shaderProgram = glCreateProgram();
+    const unsigned int shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, fragmentShader);
     glAttachShader(shaderProgram, vertexShader);
     glLinkProgram(shaderProgram);
@@ -78,7 +84,6 @@ void processInput(GLFWwindow *window) {
 }
 
 void frameBufferSizeCallback(GLFWwindow *window, int width, int height) {
-    std::cout << "Window resized" << std::endl;
     glViewport(0, 0, width, height);
 }
 
@@ -110,21 +115,48 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    unsigned int shaderProgram = createShaderProgram("../shader1.frag", "../shader1.vert");
-
     glViewport(0, 0, WIDTH, HEIGHT);
+
+    unsigned int shaderProgram = createShaderProgram("../shader1.frag", "../shader1.vert");
+    glUseProgram(shaderProgram);
+
+    unsigned int vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    unsigned int vbo;
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void *>(nullptr));
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
     glfwSetFramebufferSizeCallback(window, frameBufferSizeCallback);
 
     while (!glfwWindowShouldClose(window)) {
+        processInput(window);
+
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        processInput(window);
-        glfwSwapBuffers(window);
+        glUseProgram(shaderProgram);
+        glBindVertexArray(vao);
+
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
         glfwPollEvents();
+        glfwSwapBuffers(window);
     }
 
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glDeleteBuffers(1, &vbo);
+    glDeleteVertexArrays(1, &vao);
+    glDeleteProgram(shaderProgram);
     glfwDestroyWindow(window);
     glfwTerminate();
     return EXIT_SUCCESS;
