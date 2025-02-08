@@ -5,9 +5,11 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(learning_opengl main.cpp)
 
+find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 
 target_link_libraries(
         learning_opengl
         PRIVATE glfw
+        PRIVATE glad::glad
 )
