@@ -4,15 +4,20 @@
 #include <GLFW/glfw3.h>
 #include "string"
 #include "sstream"
+#include "glm/glm.hpp"
 
 constexpr unsigned int WIDTH = 800;
 constexpr unsigned int HEIGHT = 800;
 std::string TITLE = "Learning Opengl 2";
 
-float vertices[] = {
-    -0.5, -0.5, 0.0,
-    0.0, 0.5, 0.0,
-    0.5, -0.5, 0.0,
+struct Vertex {
+    glm::vec3 position;
+};
+
+Vertex vertices[] = {
+    {{-0.5, -0.5, 0.0}},
+    {{0.0, 0.5, 0.0}},
+    {{0.5, -0.5, 0.0}},
 };
 
 unsigned int indices[] = {

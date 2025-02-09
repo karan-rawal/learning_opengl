@@ -7,9 +7,11 @@ add_executable(learning_opengl main.cpp)
 
 find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 target_link_libraries(
         learning_opengl
         PRIVATE glfw
         PRIVATE glad::glad
+        PRIVATE glm::glm
 )
